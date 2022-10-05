@@ -1,11 +1,13 @@
 #include "Calculator.h"
 
+typedef IOperation* (__stdcall* factory_t)();
+
 Calculator::Calculator()
 {
-	binaryFunctions["+"] = add;
-	binaryFunctions["-"] = subtract;
-	binaryFunctions["*"] = multiply;
-	binaryFunctions["/"] = divide;
+	operations.insert({ add, "+", 0});
+	operations.insert({ subtract, "-", 0 });
+	operations.insert({ multiply, "*", 1 });
+	operations.insert({ divide, "/", 1 });
 }
 
 std::string Calculator::solve(std::string& expression) const
@@ -19,9 +21,30 @@ std::string Calculator::solve(std::string& expression) const
 	return std::to_string(solveReversePolskNotation(reversePolskNotation));
 }
 
-void Calculator::readDll()
+bool Calculator::readDll()
 {
+	const std::string pluginsDir = "plugins";
+	const std::filesystem::path plugins{ pluginsDir };
+	for (auto const& file : std::filesystem::directory_iterator{ plugins })
+	{
+		HMODULE Module = LoadLibraryA(file.path().generic_string().c_str());
+		if (!Module)
+		{
+			return false;
+		}
+		std::string name = file.path().string().substr(pluginsDir.size() + 1, file.path().string().size() - pluginsDir.size() - 5);
+		std::cout << name << std::endl;
+		factory_t func = (factory_t)GetProcAddress(Module, "makeOperation");
+		if (!func)
+		{
+			return false;
+		}
 
+		IOperation* hope = func();
+		operations.insert({ hope->fun(), name, 2});
+	}
+
+	return true;
 }
 
 bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskNotation, std::string const& expression) const
@@ -50,16 +73,6 @@ bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 			--i;
 			reversePolskNotation.push_back(number);
 		}
-		else if (expression[i] == '+' || expression[i] == '-' || expression[i] == '*' || expression[i] == '/' || expression[i] == '(')
-		{
-			while (!stack.empty() && (expression[i] == '+' || expression[i] == '-') && (stack.top() == "*" || stack.top() == "/"))
-			{
-				reversePolskNotation.push_back(stack.top());
-				stack.pop();
-			}
-
-			stack.push(std::string(1, expression[i]));
-		}
 		else if (expression[i] == ')')
 		{
 			while (!stack.empty() && stack.top() != "(")
@@ -74,6 +87,65 @@ bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 			}
 
 			stack.pop();
+		}
+		else if (expression[i] == '(')
+		{
+			stack.push(std::string(1, expression[i]));
+		}
+		else 
+		{
+			std::string oper = "";
+			if (expression[i] == '+' || expression[i] == '-' || expression[i] == '*' || expression[i] == '/')
+			{
+				oper = std::string(1, expression[i]);
+			}
+			else
+			{
+				auto checkIfPartOfOperation = [](char symbol) {
+					return (symbol < '0' || symbol > '9')
+						&& symbol != '.'
+						&& symbol != '('
+						&& symbol != ')'; };
+
+				while (checkIfPartOfOperation(expression[i]) && i < expression.size())
+				{
+					oper += std::string(1, expression[i]);
+					++i;
+				}
+
+				--i;
+			}
+
+			auto operIter = std::find_if(operations.begin(), operations.end(), [oper](auto operation) {
+				return operation.name == oper;
+				});
+			if (operIter == operations.end())
+			{
+				return false;
+			}
+
+			if (operIter->isBinary && !stack.empty())
+			{
+				std::string top = stack.top();
+				auto stackIter = std::find_if(operations.begin(), operations.end(), [top](auto operation) {
+					return operation.name == top;
+				});
+				while (!stack.empty() && stackIter != operations.end()
+					&& (operIter->priority < stackIter->priority || !stackIter->isBinary))
+				{
+					reversePolskNotation.push_back(top);
+					stack.pop();
+					if (!stack.empty())
+					{
+						top = stack.top();
+						stackIter = std::find_if(operations.begin(), operations.end(), [top](auto operation) {
+							return operation.name == top;
+						});
+					}
+				}
+			}
+
+			stack.push(oper);
 		}
 	}
 
@@ -91,13 +163,22 @@ double Calculator::solveReversePolskNotation(std::vector<std::string> const& rev
 	std::stack<double> stack;
 	for (auto& piece : reversePolskNotation)
 	{
-		auto iter = binaryFunctions.find(piece);
-		if (iter != binaryFunctions.end())
+		auto iter = std::find_if(operations.cbegin(), operations.cend(), [piece](auto oper) {
+			return oper.name == piece;
+			});
+		if (iter != operations.end())
 		{
 			double tmp = stack.top();
 			stack.pop();
-			tmp = iter->second(stack.top(), tmp);
-			stack.pop();
+			if (iter->isBinary)
+			{
+				tmp = iter->binary(stack.top(), tmp);
+				stack.pop();
+			}
+			else
+			{
+				tmp = iter->unary(tmp);
+			}
 			stack.push(tmp);
 		}
 		else

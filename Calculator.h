@@ -2,14 +2,18 @@
 #include <string>
 #include <stack>
 #include <vector>
-#include <map>
-#include <functional>
+#include <set>
+#include <filesystem>
+#include <iostream>
+#include <Windows.h>
+#include "interfaces/interfaces.h"
+#include "Operation.h"
 
 class Calculator
 {
 public:
 	Calculator();
-	void readDll();
+	bool readDll();
 	std::string solve(std::string& expression) const;
 private:
 	bool getReversePolskNotation(std::vector<std::string>& reversePolskNotation, std::string const& expression) const;
@@ -19,6 +23,5 @@ private:
 	static double multiply(double a, double b);
 	static double divide(double a, double b);
 private:
-	std::map <std::string, std::function<double(double, double)>> binaryFunctions;
+	std::set<Operation> operations;
 };
-

@@ -5,7 +5,12 @@
 int main(int argc, char** argv)
 {
 	Calculator calc;
-	calc.readDll();
+	if (!calc.readDll())
+	{
+		std::cout << "Error reading dll" << std::endl;
+		return 4;
+	}
+
 	std::string expression;
 	std::getline(std::cin, expression);
 	while (expression != "q")
