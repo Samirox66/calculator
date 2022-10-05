@@ -7,7 +7,7 @@ int main(int argc, char** argv)
 	Calculator calc;
 	if (!calc.readDll())
 	{
-		std::cout << "Error reading dll" << std::endl;
+		std::cout << "Error reading dlls" << std::endl;
 		return 4;
 	}
 

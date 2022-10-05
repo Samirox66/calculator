@@ -25,6 +25,7 @@ bool Calculator::readDll()
 {
 	const std::string pluginsDir = "plugins";
 	const std::filesystem::path plugins{ pluginsDir };
+	std::cout << "Loaded operations:" << std::endl;
 	for (auto const& file : std::filesystem::directory_iterator{ plugins })
 	{
 		HMODULE Module = LoadLibraryA(file.path().generic_string().c_str());
@@ -32,8 +33,6 @@ bool Calculator::readDll()
 		{
 			return false;
 		}
-		std::string name = file.path().string().substr(pluginsDir.size() + 1, file.path().string().size() - pluginsDir.size() - 5);
-		std::cout << name << std::endl;
 		factory_t func = (factory_t)GetProcAddress(Module, "makeOperation");
 		if (!func)
 		{
@@ -41,6 +40,8 @@ bool Calculator::readDll()
 		}
 
 		IOperation* hope = func();
+		std::string name = hope->name();
+		std::cout << name << std::endl;
 		operations.insert({ hope->fun(), name, 2});
 	}
 
@@ -92,46 +93,30 @@ bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 		{
 			stack.push(std::string(1, expression[i]));
 		}
-		else 
+		else
 		{
-			std::string oper = "";
-			if (expression[i] == '+' || expression[i] == '-' || expression[i] == '*' || expression[i] == '/')
+			auto operation = operations.begin();
+			for (; operation != operations.end(); ++operation)
 			{
-				oper = std::string(1, expression[i]);
-			}
-			else
-			{
-				auto checkIfPartOfOperation = [](char symbol) {
-					return (symbol < '0' || symbol > '9')
-						&& symbol != '.'
-						&& symbol != '('
-						&& symbol != ')'; };
-
-				while (checkIfPartOfOperation(expression[i]) && i < expression.size())
+				if (operation->name == expression.substr(i, operation->name.size()))
 				{
-					oper += std::string(1, expression[i]);
-					++i;
+					break;
 				}
-
-				--i;
 			}
-
-			auto operIter = std::find_if(operations.begin(), operations.end(), [oper](auto operation) {
-				return operation.name == oper;
-				});
-			if (operIter == operations.end())
+			if (operation == operations.end())
 			{
 				return false;
 			}
-
-			if (operIter->isBinary && !stack.empty())
+			i += operation->name.size() - 1;
+			
+			if (operation->isBinary && !stack.empty())
 			{
 				std::string top = stack.top();
 				auto stackIter = std::find_if(operations.begin(), operations.end(), [top](auto operation) {
 					return operation.name == top;
 				});
 				while (!stack.empty() && stackIter != operations.end()
-					&& (operIter->priority < stackIter->priority || !stackIter->isBinary))
+					&& (operation->priority < stackIter->priority || !stackIter->isBinary))
 				{
 					reversePolskNotation.push_back(top);
 					stack.pop();
@@ -145,7 +130,7 @@ bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 				}
 			}
 
-			stack.push(oper);
+			stack.push(operation->name);
 		}
 	}
 
