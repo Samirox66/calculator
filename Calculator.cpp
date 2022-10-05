@@ -10,6 +10,14 @@ Calculator::Calculator()
 	operations.insert({ divide, "/", 1 });
 }
 
+Calculator::~Calculator()
+{
+	for (auto& dll : dlls)
+	{
+		FreeLibrary(dll);
+	}
+}
+
 std::string Calculator::solve(std::string& expression) const
 {
 	std::vector<std::string> reversePolskNotation;
@@ -39,10 +47,12 @@ bool Calculator::readDll()
 			return false;
 		}
 
+		dlls.push_back(Module);
 		IOperation* hope = func();
 		std::string name = hope->name();
 		std::cout << name << std::endl;
-		operations.insert({ hope->fun(), name, 2});
+		operations.insert({ hope->fun(), name, hope->priority()});
+		delete hope;
 	}
 
 	return true;

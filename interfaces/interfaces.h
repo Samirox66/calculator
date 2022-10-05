@@ -9,4 +9,5 @@ public:
 	virtual oper_t fun () = 0;
 	virtual std::string name() = 0;
 	virtual int priority() = 0;
+	virtual ~IOperation() {}
 };

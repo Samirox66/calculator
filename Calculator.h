@@ -13,6 +13,7 @@ class Calculator
 {
 public:
 	Calculator();
+	~Calculator();
 	bool readDll();
 	std::string solve(std::string& expression) const;
 private:
@@ -24,4 +25,5 @@ private:
 	static double divide(double a, double b);
 private:
 	std::set<Operation> operations;
+	std::vector<HMODULE> dlls;
 };
