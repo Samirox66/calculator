@@ -14,7 +14,7 @@ class Calculator
 public:
 	Calculator();
 	~Calculator();
-	bool readDll();
+	void readDll();
 	std::string solve(std::string& expression) const;
 private:
 	bool getReversePolskNotation(std::vector<std::string>& reversePolskNotation, std::string const& expression) const;

@@ -29,7 +29,7 @@ std::string Calculator::solve(std::string& expression) const
 	return std::to_string(solveReversePolskNotation(reversePolskNotation));
 }
 
-bool Calculator::readDll()
+void Calculator::readDll()
 {
 	const std::string pluginsDir = "plugins";
 	const std::filesystem::path plugins{ pluginsDir };
@@ -37,25 +37,21 @@ bool Calculator::readDll()
 	for (auto const& file : std::filesystem::directory_iterator{ plugins })
 	{
 		HMODULE Module = LoadLibraryA(file.path().generic_string().c_str());
-		if (!Module)
+		if (Module)
 		{
-			return false;
+			factory_t func = (factory_t)GetProcAddress(Module, "makeOperation");
+			if (func)
+			{
+				dlls.push_back(Module);
+				IOperation* hope = func();
+				std::string name = hope->name();
+				std::cout << name << std::endl;
+				operations.insert({ hope->fun(), name, hope->priority() });
+				delete hope;
+			}
 		}
-		factory_t func = (factory_t)GetProcAddress(Module, "makeOperation");
-		if (!func)
-		{
-			return false;
-		}
-
-		dlls.push_back(Module);
-		IOperation* hope = func();
-		std::string name = hope->name();
-		std::cout << name << std::endl;
-		operations.insert({ hope->fun(), name, hope->priority()});
-		delete hope;
 	}
 
-	return true;
 }
 
 bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskNotation, std::string const& expression) const
@@ -102,6 +98,10 @@ bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 		else if (expression[i] == '(')
 		{
 			stack.push(std::string(1, expression[i]));
+		}
+		else if (expression[i] == ' ')
+		{
+			continue;
 		}
 		else
 		{
