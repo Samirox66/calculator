@@ -18,7 +18,7 @@ public:
 	std::string solve(std::string& expression) const;
 private:
 	bool getReversePolskNotation(std::vector<std::string>& reversePolskNotation, std::string const& expression) const;
-	double solveReversePolskNotation(std::vector<std::string> const& reversePolskNotation) const;
+	double solveReversePolskNotation(std::vector<std::string> const& reversePolskNotation, bool& error) const;
 	static double add(double a, double b);
 	static double subtract(double a, double b);
 	static double multiply(double a, double b);

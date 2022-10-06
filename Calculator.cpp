@@ -26,7 +26,9 @@ std::string Calculator::solve(std::string& expression) const
 		return "error";
 	}
 
-	return std::to_string(solveReversePolskNotation(reversePolskNotation));
+	bool error = false;
+	std::string res = std::to_string(solveReversePolskNotation(reversePolskNotation, error));
+	return error ? "error" : res;
 }
 
 void Calculator::readDll()
@@ -153,7 +155,7 @@ bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 	return true;
 }
 
-double Calculator::solveReversePolskNotation(std::vector<std::string> const& reversePolskNotation) const
+double Calculator::solveReversePolskNotation(std::vector<std::string> const& reversePolskNotation, bool& error) const
 {
 	std::stack<double> stack;
 	for (auto& piece : reversePolskNotation)
@@ -163,10 +165,21 @@ double Calculator::solveReversePolskNotation(std::vector<std::string> const& rev
 			});
 		if (iter != operations.end())
 		{
+			if (stack.empty())
+			{
+				error = true;
+				return 0.0;
+			}
+
 			double tmp = stack.top();
 			stack.pop();
 			if (iter->isBinary)
 			{
+				if (stack.empty())
+				{
+					error = true;
+					return 0.0;
+				}
 				tmp = iter->binary(stack.top(), tmp);
 				stack.pop();
 			}
