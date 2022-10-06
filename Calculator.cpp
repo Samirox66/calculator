@@ -21,14 +21,8 @@ Calculator::~Calculator()
 std::string Calculator::solve(std::string& expression) const
 {
 	std::vector<std::string> reversePolskNotation;
-	if (!getReversePolskNotation(reversePolskNotation, expression))
-	{
-		return "error";
-	}
-
-	bool error = false;
-	std::string res = std::to_string(solveReversePolskNotation(reversePolskNotation, error));
-	return error ? "error" : res;
+	getReversePolskNotation(reversePolskNotation, expression);
+	return std::to_string(solveReversePolskNotation(reversePolskNotation));
 }
 
 void Calculator::readDll()
@@ -56,7 +50,7 @@ void Calculator::readDll()
 
 }
 
-bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskNotation, std::string const& expression) const
+void Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskNotation, std::string const& expression) const
 {
 	std::stack<std::string> stack;
 	for (size_t i = 0; i < expression.size(); ++i)
@@ -70,7 +64,7 @@ bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 				{
 					if (hasPoint)
 					{
-						return false;
+						throw std::exception("too many points in number");
 					}
 					hasPoint = true;
 				}
@@ -92,7 +86,7 @@ bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 
 			if (stack.empty())
 			{
-				return false;
+				throw std::exception("expression has more closed brackets, than opened ");
 			}
 
 			stack.pop();
@@ -117,7 +111,7 @@ bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 			}
 			if (operation == operations.end())
 			{
-				return false;
+				throw std::exception("impossible operation");
 			}
 			i += operation->name.size() - 1;
 			
@@ -151,11 +145,9 @@ bool Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 		reversePolskNotation.push_back(stack.top());
 		stack.pop();
 	}
-
-	return true;
 }
 
-double Calculator::solveReversePolskNotation(std::vector<std::string> const& reversePolskNotation, bool& error) const
+double Calculator::solveReversePolskNotation(std::vector<std::string> const& reversePolskNotation) const
 {
 	std::stack<double> stack;
 	for (auto& piece : reversePolskNotation)
@@ -167,8 +159,7 @@ double Calculator::solveReversePolskNotation(std::vector<std::string> const& rev
 		{
 			if (stack.empty())
 			{
-				error = true;
-				return 0.0;
+				throw std::exception("something wrong with operations");
 			}
 
 			double tmp = stack.top();
@@ -177,8 +168,7 @@ double Calculator::solveReversePolskNotation(std::vector<std::string> const& rev
 			{
 				if (stack.empty())
 				{
-					error = true;
-					return 0.0;
+					throw std::exception("something wrong with operations");
 				}
 				tmp = iter->binary(stack.top(), tmp);
 				stack.pop();
