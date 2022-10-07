@@ -36,9 +36,9 @@ void Calculator::readDll()
 		if (Module)
 		{
 			factory_t func = (factory_t)GetProcAddress(Module, "makeOperation");
+			dlls.push_back(Module);
 			if (func)
 			{
-				dlls.push_back(Module);
 				IOperation* hope = func();
 				std::string name = hope->name();
 				std::cout << name << std::endl;
@@ -152,11 +152,15 @@ double Calculator::solveReversePolskNotation(std::vector<std::string> const& rev
 	std::stack<double> stack;
 	for (auto& piece : reversePolskNotation)
 	{
-		auto iter = std::find_if(operations.cbegin(), operations.cend(), [piece](auto oper) {
-			return oper.name == piece;
-			});
-		if (iter != operations.end())
+		if ('0' <= piece[0] && piece[0] <= '9') {
+			stack.push(std::stod(piece));
+		}
+		else
 		{
+			auto iter = std::find_if(operations.cbegin(), operations.cend(), [piece](auto oper) {
+				return oper.name == piece;
+				});
+			
 			if (stack.empty())
 			{
 				throw std::exception("something wrong with operations");
@@ -177,11 +181,8 @@ double Calculator::solveReversePolskNotation(std::vector<std::string> const& rev
 			{
 				tmp = iter->unary(tmp);
 			}
+
 			stack.push(tmp);
-		}
-		else
-		{
-			stack.push(std::stod(piece));
 		}
 	}
 
