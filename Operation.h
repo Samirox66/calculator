@@ -1,35 +1,22 @@
 #pragma once
 #include <functional>
 #include <string>
-
+#include "interfaces/interfaces.h"
 
 struct Operation
 {
 	~Operation() {}
-	Operation(double (*unary)(double), std::string name, int priority): unary(unary), name(name), isBinary(false), priority(priority) {}
-	Operation(Operation const& other): isBinary(other.isBinary), name(other.name), priority(other.priority)
-	{
-		if (isBinary)
-		{
-			binary = other.binary;
-		}
-		else
-		{
-			unary = other.unary;
-		}
-	}
+	Operation(Operation const& other): isUnary(other.isUnary), name(other.name), priority(other.priority), oper(other.oper), isPrefixed(other.isPrefixed) {}
 
 	bool operator < (Operation const& other) const
 	{
 		return name < other.name;
 	}
 
-	Operation(double (*binary)(double, double), std::string name, int priority) : binary(binary), name(name), isBinary(true), priority(priority) {}
-	union {
-		double (*unary)(double);
-		double (*binary)(double, double);
-	};
-	bool isBinary;
+	Operation(oper_t oper, std::string name, int priority, bool isUnary, bool isPrefixed) : oper(oper), name(name), isUnary(true), isPrefixed(isPrefixed), priority(priority) {}
+	oper_t oper;
+	bool isUnary;
+	bool isPrefixed;
 	std::string name;
 	int priority;
 };

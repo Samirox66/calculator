@@ -20,10 +20,10 @@ public:
 private:
 	void getReversePolskNotation(std::vector<std::string>& reversePolskNotation, std::string const& expression) const;
 	double solveReversePolskNotation(std::vector<std::string> const& reversePolskNotation) const;
-	static double add(double a, double b);
-	static double subtract(double a, double b);
-	static double multiply(double a, double b);
-	static double divide(double a, double b);
+	static void add(std::stack<double>& polsk);
+	static void subtract(std::stack<double>& polsk);
+	static void multiply(std::stack<double>& polsk);
+	static void divide(std::stack<double>& polsk);
 private:
 	std::set<Operation> operations;
 	std::vector<HMODULE> dlls;

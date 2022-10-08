@@ -4,10 +4,10 @@ typedef IOperation* (__stdcall* factory_t)();
 
 Calculator::Calculator()
 {
-	operations.insert({ add, "+", 0});
-	operations.insert({ subtract, "-", 0 });
-	operations.insert({ multiply, "*", 1 });
-	operations.insert({ divide, "/", 1 });
+	operations.insert({ add, "+", 0, false, false});
+	operations.insert({ subtract, "-", 0, false, false });
+	operations.insert({ multiply, "*", 1, false, false });
+	operations.insert({ divide, "/", 1, false, false });
 }
 
 Calculator::~Calculator()
@@ -42,7 +42,7 @@ void Calculator::readDll()
 				IOperation* hope = func();
 				std::string name = hope->name();
 				std::cout << name << std::endl;
-				operations.insert({ hope->fun(), name, hope->priority() });
+				operations.insert({ hope->fun(), name, hope->priority(), hope->isUnary(), hope->isPrefixed()});
 				delete hope;
 			}
 		}
@@ -115,14 +115,14 @@ void Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 			}
 			i += operation->name.size() - 1;
 			
-			if (operation->isBinary && !stack.empty())
+			if (!operation->isUnary && !stack.empty())
 			{
 				std::string top = stack.top();
 				auto stackIter = std::find_if(operations.begin(), operations.end(), [top](auto operation) {
 					return operation.name == top;
 				});
 				while (!stack.empty() && stackIter != operations.end()
-					&& (operation->priority < stackIter->priority || !stackIter->isBinary))
+					&& (operation->priority < stackIter->priority || stackIter->isUnary))
 				{
 					reversePolskNotation.push_back(top);
 					stack.pop();
@@ -149,11 +149,11 @@ void Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 
 double Calculator::solveReversePolskNotation(std::vector<std::string> const& reversePolskNotation) const
 {
-	std::stack<double> stack;
+	std::stack<double> polsk;
 	for (auto& piece : reversePolskNotation)
 	{
 		if ('0' <= piece[0] && piece[0] <= '9') {
-			stack.push(std::stod(piece));
+			polsk.push(std::stod(piece));
 		}
 		else
 		{
@@ -161,50 +161,66 @@ double Calculator::solveReversePolskNotation(std::vector<std::string> const& rev
 				return oper.name == piece;
 				});
 			
-			if (stack.empty())
+			if (polsk.empty())
 			{
 				throw std::exception("something wrong with operations");
 			}
 
-			double tmp = stack.top();
-			stack.pop();
-			if (iter->isBinary)
-			{
-				if (stack.empty())
-				{
-					throw std::exception("something wrong with operations");
-				}
-				tmp = iter->binary(stack.top(), tmp);
-				stack.pop();
-			}
-			else
-			{
-				tmp = iter->unary(tmp);
-			}
-
-			stack.push(tmp);
+			iter->oper(polsk);
 		}
 	}
 
-	return stack.top();
+	return polsk.top();
 }
 
-double Calculator::add(double a, double b)
+void Calculator::add(std::stack<double>& polsk)
 {
-	return a + b;
+	if (polsk.size() < 2)
+	{
+		throw std::exception("too litle numbers for operation");
+	}
+	double b = polsk.top();
+	polsk.pop();
+	b = polsk.top() + b;
+	polsk.pop();
+	polsk.push(b);
 }
 
-double Calculator::subtract(double a, double b)
+void Calculator::subtract(std::stack<double>& polsk)
 {
-	return a - b;
+	if (polsk.size() < 2)
+	{
+		throw std::exception("too litle numbers for operation");
+	}
+	double b = polsk.top();
+	polsk.pop();
+	b = polsk.top() - b;
+	polsk.pop();
+	polsk.push(b);
 }
 
-double Calculator::multiply(double a, double b)
+void Calculator::multiply(std::stack<double>& polsk)
 {
-	return a * b;
+	if (polsk.size() < 2)
+	{
+		throw std::exception("too litle numbers for operation");
+	}
+	double b = polsk.top();
+	polsk.pop();
+	b = polsk.top() * b;
+	polsk.pop();
+	polsk.push(b);
 }
 
-double Calculator::divide(double a, double b)
+void Calculator::divide(std::stack<double>& polsk)
 {
-	return a / b;
+	if (polsk.size() < 2)
+	{
+		throw std::exception("too litle numbers for operation");
+	}
+	double b = polsk.top();
+	polsk.pop();
+	b = polsk.top() / b;
+	polsk.pop();
+	polsk.push(b);
 }
