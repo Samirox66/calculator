@@ -95,7 +95,7 @@ void Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 		{
 			stack.push(std::string(1, expression[i]));
 		}
-		else if (expression[i] == ' ')
+		else if (expression[i] == ' ' || expression[i] ==',')
 		{
 			continue;
 		}
@@ -113,30 +113,44 @@ void Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 			{
 				throw std::exception("impossible operation");
 			}
+
 			i += operation->name.size() - 1;
-			
-			if (!operation->isUnary && !stack.empty())
+			if (operation->isUnary)
 			{
-				std::string top = stack.top();
-				auto stackIter = std::find_if(operations.begin(), operations.end(), [top](auto operation) {
-					return operation.name == top;
-				});
-				while (!stack.empty() && stackIter != operations.end()
-					&& (operation->priority < stackIter->priority || stackIter->isUnary))
+				if (operation->isPrefixed)
 				{
-					reversePolskNotation.push_back(top);
-					stack.pop();
-					if (!stack.empty())
-					{
-						top = stack.top();
-						stackIter = std::find_if(operations.begin(), operations.end(), [top](auto operation) {
-							return operation.name == top;
-						});
-					}
+					stack.push(operation->name);
+				}
+				else
+				{
+					reversePolskNotation.push_back(operation->name);
 				}
 			}
+			else
+			{
+				if (!stack.empty())
+				{
+					std::string top = stack.top();
+					auto stackIter = std::find_if(operations.begin(), operations.end(), [top](auto operation) {
+						return operation.name == top;
+						});
+					while (!stack.empty() && stackIter != operations.end()
+						&& (operation->priority < stackIter->priority || stackIter->isUnary))
+					{
+						reversePolskNotation.push_back(top);
+						stack.pop();
+						if (!stack.empty())
+						{
+							top = stack.top();
+							stackIter = std::find_if(operations.begin(), operations.end(), [top](auto operation) {
+								return operation.name == top;
+							});
+						}
+					}
+				}
 
-			stack.push(operation->name);
+				stack.push(operation->name);
+			}
 		}
 	}
 
@@ -168,6 +182,11 @@ double Calculator::solveReversePolskNotation(std::vector<std::string> const& rev
 
 			iter->oper(polsk);
 		}
+	}
+
+	if (polsk.size() != 1)
+	{
+		throw std::exception("wrong expression");
 	}
 
 	return polsk.top();

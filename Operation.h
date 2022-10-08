@@ -13,7 +13,7 @@ struct Operation
 		return name < other.name;
 	}
 
-	Operation(oper_t oper, std::string name, int priority, bool isUnary, bool isPrefixed) : oper(oper), name(name), isUnary(true), isPrefixed(isPrefixed), priority(priority) {}
+	Operation(oper_t oper, std::string name, int priority, bool isUnary, bool isPrefixed) : oper(oper), name(name), isUnary(isUnary), isPrefixed(isPrefixed), priority(priority) {}
 	oper_t oper;
 	bool isUnary;
 	bool isPrefixed;
