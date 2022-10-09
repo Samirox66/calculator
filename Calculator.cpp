@@ -56,24 +56,8 @@ void Calculator::getReversePolskNotation(std::vector<std::string>& reversePolskN
 	for (size_t i = 0; i < expression.size(); ++i)
 	{
 		if (expression[i] >= '0' && expression[i] <= '9') {
-			std::string number = "";
-			bool hasPoint = false;
-			while (expression[i] >= '0' && expression[i] <= '9' || expression[i] == '.')
-			{
-				if (expression[i] == '.')
-				{
-					if (hasPoint)
-					{
-						throw std::exception("too many points in number");
-					}
-					hasPoint = true;
-				}
-				
-				number += std::string(1, expression[i]);
-				++i;
-			}
-
-			--i;
+			std::string number = getNumberFromStr(expression, i);
+			i += number.size() - 1;
 			reversePolskNotation.push_back(number);
 		}
 		else if (expression[i] == ')')
@@ -190,6 +174,28 @@ double Calculator::solveReversePolskNotation(std::vector<std::string> const& rev
 	}
 
 	return polsk.top();
+}
+
+std::string Calculator::getNumberFromStr(std::string const& str, size_t index)
+{
+	std::string number = "";
+	bool hasPoint = false;
+	while (str[index] >= '0' && str[index] <= '9' || str[index] == '.')
+	{
+		if (str[index] == '.')
+		{
+			if (hasPoint)
+			{
+				throw std::exception("too many points in number");
+			}
+			hasPoint = true;
+		}
+
+		number += std::string(1, str[index]);
+		++index;
+	}
+
+	return number;
 }
 
 void Calculator::add(std::stack<double>& polsk)

@@ -20,6 +20,7 @@ public:
 private:
 	void getReversePolskNotation(std::vector<std::string>& reversePolskNotation, std::string const& expression) const;
 	double solveReversePolskNotation(std::vector<std::string> const& reversePolskNotation) const;
+	static std::string getNumberFromStr(std::string const& str, size_t index);
 	static void add(std::stack<double>& polsk);
 	static void subtract(std::stack<double>& polsk);
 	static void multiply(std::stack<double>& polsk);
