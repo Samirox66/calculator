@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 		{
 			std::cout << expression << "=" << calc.solve(expression) << std::endl;
 		}
-		catch (std::exception error)
+		catch (std::exception& error)
 		{
 			std::cout << error.what() << std::endl;
 		}

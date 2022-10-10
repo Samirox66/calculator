@@ -10,6 +10,11 @@ struct Operation
 
 	bool operator < (Operation const& other) const
 	{
+		if (name == other.name)
+		{
+			return isUnary < other.isUnary;
+		}
+
 		return name < other.name;
 	}
 
