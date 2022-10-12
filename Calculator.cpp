@@ -18,9 +18,10 @@ Calculator::~Calculator()
 	}
 }
 
-std::string Calculator::solve(std::string& expression) const
+std::string Calculator::solve(std::string const& expr)
 {
-	std::vector<std::string> reversePolskNotation = getReversePolskNotation(expression);
+	expression = expr;
+	std::vector<std::string> reversePolskNotation = getReversePolskNotation();
 	return std::to_string(solveReversePolskNotation(reversePolskNotation));
 }
 
@@ -48,9 +49,9 @@ void Calculator::readDll()
 	}
 }
 
-std::vector<std::string> Calculator::getReversePolskNotation(std::string& expression) const
+std::vector<std::string> Calculator::getReversePolskNotation()
 {
-	trim(expression);
+	trim();
 	std::vector<std::string> reversePolskNotation;
 	std::stack<std::string> stack;
 	for (size_t i = 0; i < expression.size(); ++i)
@@ -64,7 +65,7 @@ std::vector<std::string> Calculator::getReversePolskNotation(std::string& expres
 				++k;
 			}
 			
-			number += getNumberFromStr(expression, k);
+			number += getNumberFromStr(k);
 			i += number.size() - 1;
 			reversePolskNotation.push_back(number);
 		}
@@ -82,7 +83,7 @@ std::vector<std::string> Calculator::getReversePolskNotation(std::string& expres
 		}
 		else
 		{
-			handleOperation(reversePolskNotation, stack, expression, &i);
+			handleOperation(reversePolskNotation, stack, &i);
 		}
 	}
 
@@ -157,7 +158,7 @@ void Calculator::handleClosingBracket(std::vector<std::string>& reversePolskNota
 	}
 }
 
-void Calculator::handleOperation(std::vector<std::string>& reversePolskNotation, std::stack<std::string>& stack, std::string expression, size_t* i) const
+void Calculator::handleOperation(std::vector<std::string>& reversePolskNotation, std::stack<std::string>& stack, size_t* i) const
 {
 	auto operation = operations.begin();
 	for (; operation != operations.end(); ++operation)
@@ -211,13 +212,13 @@ void Calculator::handleOperation(std::vector<std::string>& reversePolskNotation,
 	}
 }
 
-std::string Calculator::getNumberFromStr(std::string const& str, size_t index)
+std::string Calculator::getNumberFromStr(size_t index)
 {
 	std::string number = "";
 	bool hasPoint = false;
-	while (str[index] >= '0' && str[index] <= '9' || str[index] == '.')
+	while (expression[index] >= '0' && expression[index] <= '9' || expression[index] == '.')
 	{
-		if (str[index] == '.')
+		if (expression[index] == '.')
 		{
 			if (hasPoint)
 			{
@@ -226,7 +227,7 @@ std::string Calculator::getNumberFromStr(std::string const& str, size_t index)
 			hasPoint = true;
 		}
 
-		number += std::string(1, str[index]);
+		number += std::string(1, expression[index]);
 		++index;
 	}
 
@@ -285,17 +286,17 @@ void Calculator::divide(std::stack<double>& polsk)
 	polsk.push(b);
 }
 
-void Calculator::trim(std::string& str)
+void Calculator::trim()
 {
 	size_t k = 0;
-	for (size_t i = 0; i < str.size(); ++i)
+	for (size_t i = 0; i < expression.size(); ++i)
 	{
-		if (str[i] != ' ')
+		if (expression[i] != ' ')
 		{
-			str[k] = str[i];
+			expression[k] = expression[i];
 			++k;
 		}
 	}
 
-	str.resize(k);
+	expression.resize(k);
 }
