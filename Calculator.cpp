@@ -77,10 +77,6 @@ std::vector<std::string> Calculator::getReversePolskNotation()
 		{
 			stack.push(std::string(1, expression[i]));
 		}
-		else if (expression[i] ==',')
-		{
-			continue;
-		}
 		else
 		{
 			handleOperation(reversePolskNotation, stack, &i);

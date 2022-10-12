@@ -14,6 +14,10 @@ class Calculator
 {
 public:
 	Calculator();
+	Calculator(Calculator const&) = delete;
+	Calculator& operator =(Calculator const&) = delete;
+	Calculator(Calculator&&) = default;
+	Calculator& operator =(Calculator&&) = default;
 	~Calculator();
 	void readDll();
 	std::string solve(std::string const& expression);

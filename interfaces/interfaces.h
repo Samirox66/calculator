@@ -12,4 +12,5 @@ public:
 	virtual int priority() = 0;
 	virtual bool isUnary() = 0;
 	virtual bool isPrefixed() = 0;
+	virtual ~IOperation() {};
 };
