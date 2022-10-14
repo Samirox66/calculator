@@ -30,20 +30,23 @@ void Calculator::readDll()
 	const std::string pluginsDir = "plugins";
 	const std::filesystem::path plugins{ pluginsDir };
 	std::cout << "Loaded operations:" << std::endl;
-	for (auto const& file : std::filesystem::directory_iterator{ plugins })
-	{
-		HMODULE Module = LoadLibraryA(file.path().generic_string().c_str());
-		if (Module)
+	if (std::filesystem::is_directory(plugins))
+	{ 
+		for (auto const& file : std::filesystem::directory_iterator{ plugins })
 		{
-			factory_t func = (factory_t)GetProcAddress(Module, "makeOperation");
-			dlls.push_back(Module);
-			if (func)
+			HMODULE Module = LoadLibraryA(file.path().generic_string().c_str());
+			if (Module)
 			{
-				IOperation* hope = func();
-				std::string name = hope->name();
-				std::cout << name << std::endl;
-				operations.insert({ hope->fun(), name, hope->priority(), hope->isUnary(), hope->isPrefixed()});
-				delete hope;
+				factory_t func = (factory_t)GetProcAddress(Module, "makeOperation");
+				dlls.push_back(Module);
+				if (func)
+				{
+					IOperation* hope = func();
+					std::string name = hope->name();
+					std::cout << name << std::endl;
+					operations.insert({ hope->fun(), name, hope->priority(), hope->isUnary(), hope->isPrefixed() });
+					delete hope;
+				}
 			}
 		}
 	}
