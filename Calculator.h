@@ -7,7 +7,6 @@
 #include <iostream>
 #include <exception>
 #include <Windows.h>
-#include "interfaces/interfaces.h"
 #include "Operation.h"
 
 class Calculator
@@ -34,6 +33,6 @@ private:
 	void trim();
 private:
 	std::string expression;
-	std::set<Operation> operations;
+	std::set<Operation*> operations;
 	std::vector<HMODULE> dlls;
 };

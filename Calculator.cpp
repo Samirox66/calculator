@@ -1,13 +1,13 @@
 #include "Calculator.h"
 
-typedef IOperation* (__stdcall* factory_t)();
+typedef Operation* (__stdcall* factory_t)();
 
 Calculator::Calculator()
 {
-	operations.insert({ add, "+", 0, false, false});
-	operations.insert({ subtract, "-", 0, false, false });
-	operations.insert({ multiply, "*", 1, false, false });
-	operations.insert({ divide, "/", 1, false, false });
+	operations.insert(new Operation( add, "+", 0, false, false ));
+	operations.insert(new Operation( subtract, "-", 0, false, false ));
+	operations.insert(new Operation( multiply, "*", 1, false, false ));
+	operations.insert(new Operation( divide, "/", 1, false, false ));
 }
 
 Calculator::~Calculator()
@@ -15,6 +15,11 @@ Calculator::~Calculator()
 	for (auto& dll : dlls)
 	{
 		FreeLibrary(dll);
+	}
+
+	for (auto& oper : operations)
+	{
+		delete oper;
 	}
 }
 
@@ -41,11 +46,10 @@ void Calculator::readDll()
 				dlls.push_back(Module);
 				if (func)
 				{
-					IOperation* hope = func();
-					std::string name = hope->name();
+					Operation* hope = func();
+					std::string name = hope->name;
 					std::cout << name << std::endl;
-					operations.insert({ hope->fun(), name, hope->priority(), hope->isUnary(), hope->isPrefixed() });
-					delete hope;
+					operations.insert(hope);
 				}
 			}
 		}
@@ -110,7 +114,7 @@ double Calculator::solveReversePolskNotation(std::vector<std::string> const& rev
 		else
 		{
 			auto iter = std::find_if(operations.cbegin(), operations.cend(), [piece](auto oper) {
-				return oper.name == piece;
+				return oper->name == piece;
 			});
 			
 			if (polsk.empty())
@@ -118,7 +122,7 @@ double Calculator::solveReversePolskNotation(std::vector<std::string> const& rev
 				throw std::exception("something wrong with operations");
 			}
 
-			iter->oper(polsk);
+			(*iter)->oper(polsk);
 		}
 	}
 
@@ -147,9 +151,9 @@ void Calculator::handleClosingBracket(std::vector<std::string>& reversePolskNota
 	if (!stack.empty())
 	{
 		auto topOfStackIter = std::find_if(operations.begin(), operations.end(), [&stack](auto operation) {
-			return operation.name == stack.top();
+			return operation->name == stack.top();
 			});
-		if (topOfStackIter != operations.end() && topOfStackIter->isPrefixed)
+		if (topOfStackIter != operations.end() && (*topOfStackIter)->isPrefixed)
 		{
 			reversePolskNotation.push_back(stack.top());
 			stack.pop();
@@ -162,7 +166,7 @@ void Calculator::handleOperation(std::vector<std::string>& reversePolskNotation,
 	auto operation = operations.begin();
 	for (; operation != operations.end(); ++operation)
 	{
-		if (operation->name == expression.substr(*i, operation->name.size()))
+		if ((*operation)->name == expression.substr(*i, (*operation)->name.size()))
 		{
 			break;
 		}
@@ -172,16 +176,16 @@ void Calculator::handleOperation(std::vector<std::string>& reversePolskNotation,
 		throw std::exception("impossible operation");
 	}
 
-	*i += operation->name.size() - 1;
-	if (operation->isUnary)
+	*i += (*operation)->name.size() - 1;
+	if ((*operation)->isUnary)
 	{
-		if (operation->isPrefixed)
+		if ((*operation)->isPrefixed)
 		{
-			stack.push(operation->name);
+			stack.push((*operation)->name);
 		}
 		else
 		{
-			reversePolskNotation.push_back(operation->name);
+			reversePolskNotation.push_back((*operation)->name);
 		}
 	}
 	else
@@ -190,10 +194,10 @@ void Calculator::handleOperation(std::vector<std::string>& reversePolskNotation,
 		{
 			std::string top = stack.top();
 			auto topOfStackIter = std::find_if(operations.begin(), operations.end(), [top](auto operation) {
-				return operation.name == top;
+				return operation->name == top;
 				});
 			while (!stack.empty() && topOfStackIter != operations.end()
-				&& (operation->priority < topOfStackIter->priority || topOfStackIter->isUnary))
+				&& ((*operation)->priority < (*topOfStackIter)->priority || (*topOfStackIter)->isUnary))
 			{
 				reversePolskNotation.push_back(top);
 				stack.pop();
@@ -201,13 +205,13 @@ void Calculator::handleOperation(std::vector<std::string>& reversePolskNotation,
 				{
 					top = stack.top();
 					topOfStackIter = std::find_if(operations.begin(), operations.end(), [top](auto operation) {
-						return operation.name == top;
+						return operation->name == top;
 						});
 				}
 			}
 		}
 
-		stack.push(operation->name);
+		stack.push((*operation)->name);
 	}
 }
 

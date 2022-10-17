@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
-#include "interfaces/interfaces.h"
+#include <memory>
+#include <stack>
+
+typedef void(*oper_t)(std::stack<double>&);
 
 struct Operation
 {
